@@ -46,11 +46,9 @@ import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, ViewSwitcher.ViewFactory, DrawerLayout.DrawerListener{
-    public static Socket mSocket;
+
 
     private TextView tv;
-    private Button URL_button;
-    String URL = null;
     private SensorManager sManager;
     Sensor accelerometer;
     Sensor magnetometer;
@@ -100,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // confirm related
     boolean magic_match = false;
-    public static String magic = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +107,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         Utils.full_screen_mode(getWindow().getDecorView());
+
+        MenuActivity.mSocket.on("connectOK" + MenuActivity.magic, onRealConnect);
+        MenuActivity.mSocket.on(MenuActivity.uuid, onRealConnect);
 
         soundPool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
         soundPoolMap = new SparseIntArray();
@@ -163,85 +164,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         weapon_list.setDividerHeight(10);
         weapon_list.setSelectionFromTop(CircularArrayAdapter.HALF_MAX_VALUE, 0);
 
-        URL = getPreferences(MODE_PRIVATE).getString("connection", "http://10.5.6.140:3000/");
-
-        Button num_btn = (Button) findViewById(R.id.num_btn);
-        if( num_btn != null )   {
-            num_btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    type_number();
-                }
-            });
-        }
-
-        if( mSocket == null ) {
-            try {
-                mSocket = IO.socket(URL);
-            }catch (URISyntaxException e)   {
-                e.printStackTrace();
-            }
-
-            ConnectandWaitforConfirm();
-        }
-
         myVibrator = (Vibrator) getApplication().getSystemService(Service.VIBRATOR_SERVICE);
 
         tv = (TextView) findViewById(R.id.sensorValue);
-        URL_button = (Button) findViewById(R.id.URL_btn);
-
-        if( URL_button != null )    {
-            URL_button.setText(URL);
-            URL_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("enter your target URL");
-
-                    // Set up the input
-                    final EditText input = new EditText(MainActivity.this);
-                    input.setText(URL);
-                    // Specify the type of input expected;
-                    builder.setView(input);
-
-                    // Set up the buttons
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            URL = input.getText().toString();
-                            URL_button.setText(URL);
-                            getPreferences(MODE_PRIVATE).edit().putString("connection", URL).apply();
-                            try {
-                                mSocket = IO.socket(URL);
-                            }catch (URISyntaxException e)   {
-                                e.printStackTrace();
-                            }
-
-                            if( mSocket.connected() )
-                                mSocket.disconnect();
-                            if( mSocket.hasListeners("connectOK") )
-                                mSocket.off("connectOK", onConnectOK);
-
-                            ConnectandWaitforConfirm();
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    });
-
-                    builder.show();
-                }
-            });
-        }
 
         sManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        timer = new Timer(true);
+        timer.schedule(new MyTimerTask(), 80, 80);
     }
 
     private void setBombButton()    {
@@ -304,12 +236,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         sManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
         
-        if( mSocket != null ) {
+        /*if( MenuActivity.mSocket != null ) {
             ConnectandWaitforConfirm();
-            if( magic.length() > 0 )    {
+            if( MenuActivity.magic.length() > 0 )    {
                 setRealConnectListener();
             }
-        }
+        }*/
 
         if( isRunning )
             handler.postDelayed(shining_task, interval);
@@ -321,10 +253,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if( timer != null ) {
             timer.cancel();
         }
-        mSocket.disconnect();
-        mSocket.off("connectOK", onConnectOK);
-        if( magic.length() > 0 )
-            mSocket.off("connectOK"+magic, onRealConnect);
+        MenuActivity.mSocket.disconnect();
+        //MenuActivity.mSocket.off("connectOK", onConnectOK);
+        if( MenuActivity.magic.length() > 0 )
+            MenuActivity.mSocket.off("connectOK"+MenuActivity.magic, onRealConnect);
 
         if( isRunning )
             handler.removeCallbacks(shining_task);
@@ -336,13 +268,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sManager.unregisterListener(this);
         super.onStop();
 
-        if( mSocket != null )   {
-            if( mSocket.connected() )   {
-                mSocket.disconnect();
+        if( MenuActivity.mSocket != null )   {
+            if( MenuActivity.mSocket.connected() )   {
+                MenuActivity.mSocket.disconnect();
             }
-            mSocket.off("connectOK", onConnectOK);
-            if( magic.length() > 0 )
-                mSocket.off("connectOK"+magic, onRealConnect);
+            //MenuActivity.mSocket.off("connectOK", onConnectOK);
+            if( MenuActivity.magic.length() > 0 )
+                MenuActivity.mSocket.off("connectOK"+MenuActivity.magic, onRealConnect);
         }
     }
 
@@ -388,7 +320,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             message = "start";
             menu_state = false;
         }
-        mSocket.emit("message"+magic, message);
+        //mSocket.emit("message", message);
+        switch (MenuActivity.player) {
+            case 1:
+                MenuActivity.mSocket.emit("message1"+MenuActivity.magic, message);
+                break;
+            case 2:
+                MenuActivity.mSocket.emit("message2"+MenuActivity.magic, message);
+                break;
+        }
     }
 
     public void ultraAttack()   {
@@ -397,23 +337,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             message = "start";
             menu_state = false;
         }
-        mSocket.emit("ultra"+magic, message);
+        MenuActivity.mSocket.emit("ultra"+MenuActivity.magic, message);
     }
 
     public static void Switch_weapon(int Weapon_No)  {
-        mSocket.emit("switch_weapon"+magic, Weapon_No);
+        //MenuActivity.mSocket.emit("switch_weapon"+MenuActivity.magic, Weapon_No);
+
+        switch (MenuActivity.player) {
+            case 1:
+                MenuActivity.mSocket.emit("switch_weapon1"+MenuActivity.magic, Weapon_No);
+                break;
+            case 2:
+                MenuActivity.mSocket.emit("switch_weapon2"+MenuActivity.magic, Weapon_No);
+                break;
+        }
+
         CurrentWeapon = Weapon_No;
     }
 
     private Emitter.Listener onRealConnect = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            MainActivity.this.runOnUiThread(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String message = (String)args[0];
+                    String message = (String) args[0];
 
-                    if (message.equals("hit")) {
+                    if (message.equals("checkConnect")) {
+                        MenuActivity.mSocket.emit("stillConnect" + MenuActivity.magic, MenuActivity.uuid);
+                    } else if (message.equals("hit")) {
                         myVibrator.vibrate(300);
                         playSound(2);
                     } else if (message.equals("die")) {
@@ -421,62 +373,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         playSound(3);
                         menu_state = true;
 
-                        Animation animation = new AlphaAnimation(0, 1);
-                        animation.setDuration(1000);
-                        gameover.startAnimation(animation);
-                        gameover.setVisibility(View.VISIBLE);
-                        URL_button.setVisibility(View.INVISIBLE);
-
-                        handler.postDelayed(new Runnable() {
+                        gameover.setOnClickListener(new View.OnClickListener() {
                             @Override
-                            public void run() {
-                                gameover.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        gameover.setOnClickListener(null);
-                                        Animation fadeout = new AlphaAnimation(1, 0);
-                                        fadeout.setDuration(1000);
-                                        gameover.startAnimation(fadeout);
-                                        gameover.setVisibility(View.GONE);
-                                        URL_button.setVisibility(View.VISIBLE);
-                                    }
-                                });
+                            public void onClick(View v) {
+                                gameover.setOnClickListener(null);
+                                gameover.setVisibility(View.GONE);
                             }
-                        }, 3000);
-
-                        // stop shining bomb button
-                        stopAnimation();
-                    }else if( message.equals("filled") ) {
-
-                        if( !menu_state ) {  // if player alive
-                            //start shining bomb button
-                            startAnimatedBackground();
-                        }
+                        });
+                        gameover.setVisibility(View.VISIBLE);
                     }
                 }
             });
         }
     };
 
-    private Emitter.Listener onConnectOK = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
-            MainActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String message = (String)args[0];
 
-                    if (message.equals("OK")) {
-                        setRealConnectListener();
-                        timer = new Timer(true);
-                        timer.schedule(new MyTimerTask(), 80, 80);
-                    }else if( message.equals("Failed") )    {
-                        Toast.makeText(MainActivity.this, "connect failed", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-    };
 
     public void playSound(int num){
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
@@ -515,15 +426,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // ===============================================================
 
-    public class MyTimerTask extends TimerTask
-    {
-        public void run()
-        {
-            mSocket.emit("X"+magic, ZYXvalue[2]);
-            mSocket.emit("Y"+magic, ZYXvalue[1]);
-            //mSocket.emit("Z"+magic, ZYXvalue[0]);
-        }
-    }
+
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -540,42 +443,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    public void type_number()   {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle("enter your magic hash");
-
-        // Set up the input
-        final EditText input = new EditText(MainActivity.this);
-        // Specify the type of input expected;
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                magic = input.getText().toString();
-
-                mSocket.emit("magic", magic);
-                dialog.dismiss();
+    public class MyTimerTask extends TimerTask
+    {
+        public void run()
+        {
+            switch (MenuActivity.player) {
+                case 1:
+                    MenuActivity.mSocket.emit("X1"+MenuActivity.magic, ZYXvalue[2]);
+                    MenuActivity.mSocket.emit("Y1"+MenuActivity.magic, ZYXvalue[1]);
+                    break;
+                case 2:
+                    MenuActivity.mSocket.emit("X2"+MenuActivity.magic, ZYXvalue[2]);
+                    MenuActivity.mSocket.emit("Y2"+MenuActivity.magic, ZYXvalue[1]);
+                    break;
             }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
+            //mSocket.emit("X", ZYXvalue[2]);
+            //mSocket.emit("Y", ZYXvalue[1]);
+            //mSocket.emit("Z", ZYXvalue[0]);
+        }
     }
-
-    public void ConnectandWaitforConfirm()    {
-        mSocket.once("connectOK", onConnectOK);
-        mSocket.connect();
-    }
-
-    public void setRealConnectListener()   {
-        mSocket.on("connectOK"+magic, onRealConnect);
-    }
-
 }
