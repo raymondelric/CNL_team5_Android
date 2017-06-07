@@ -4,12 +4,12 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".TankActivity">
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#0099cc"
-        tools:context="tw.edu.ntu.csie.kurokuma.sync.MainActivity"
+        tools:context="tw.edu.ntu.csie.kurokuma.sync.TankActivity"
         android:id="@+id/container">
 
         <!-- The primary full-screen view. This can be replaced with whatever view
@@ -26,13 +26,6 @@
             android:textColor="#33b5e5"
             android:textSize="50sp"
             android:textStyle="bold" />
-
-        <ImageSwitcher
-            android:id="@+id/bomb_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:background="@android:color/transparent"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -57,32 +50,6 @@
         <!-- This FrameLayout insets its children based on system windows using
              android:fitsSystemWindows. -->
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="center|right"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:src="@drawable/bullet"
-            android:elevation="5dp"
-            app:pressedTranslationZ="12dp"
-            app:backgroundTint="@color/bulletBackground"/>
-
     </FrameLayout>
-
-    <io.codetail.widget.RevealFrameLayout
-        android:id="@+id/transition_frame"
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="end"
-        android:background="@drawable/circle_frame_transparent"
-        >
-        <tw.edu.ntu.csie.kurokuma.sync.HalfCircleListView
-            android:id="@+id/weapon_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clickable="true"
-            android:descendantFocusability="blocksDescendants"/>
-    </io.codetail.widget.RevealFrameLayout>
 
 </android.support.v4.widget.DrawerLayout>

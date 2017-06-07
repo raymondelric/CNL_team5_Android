@@ -46,6 +46,38 @@
             android:layout_alignBottom="@+id/URL_btn"
             android:layout_centerHorizontal="true" />
 
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/username"
+            android:layout_gravity="center_horizontal|top"
+            android:background="#ff8000"
+            android:text="username"
+            android:layout_marginTop="10dp"
+            android:textSize="25sp" />
+
+        <mehdi.sakout.fancybuttons.FancyButton
+            android:id="@+id/playBtnTank"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="10dp"
+            android:onClick="goPlayTank"
+            android:transitionName="@string/blue_transitionName"
+            fancy:fb_borderColor="#FFFFFF"
+            fancy:fb_borderWidth="1dp"
+            fancy:fb_defaultColor="#0099cc"
+            fancy:fb_focusColor="#19c2df"
+            fancy:fb_iconResource="@drawable/tank"
+            fancy:fb_iconPosition="left"
+            fancy:fb_radius="30dp"
+            fancy:fb_text="Start Tank"
+            fancy:fb_textColor="#FFFFFF"
+            fancy:fb_textSize="30sp" />
+
         <mehdi.sakout.fancybuttons.FancyButton
             android:id="@+id/playBtn"
             android:layout_gravity="center"
@@ -61,22 +93,13 @@
             fancy:fb_borderWidth="1dp"
             fancy:fb_defaultColor="#0099cc"
             fancy:fb_focusColor="#19c2df"
-            fancy:fb_iconResource="@drawable/person_button_size"
+            fancy:fb_iconResource="@drawable/shooter"
             fancy:fb_iconPosition="left"
             fancy:fb_radius="30dp"
-            fancy:fb_text="Start"
+            fancy:fb_text="Start Shooter"
             fancy:fb_textColor="#FFFFFF"
-            fancy:fb_textSize="30sp"/>
-
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/username"
-            android:layout_gravity="center_horizontal|top"
-            android:background="#ff8000"
-            android:text="username"
-            android:layout_marginTop="10dp"
-            android:textSize="25sp" />
+            fancy:fb_textSize="30sp"
+            android:layout_marginBottom="75dp" />
 
     </FrameLayout>
 </android.support.v4.widget.DrawerLayout>

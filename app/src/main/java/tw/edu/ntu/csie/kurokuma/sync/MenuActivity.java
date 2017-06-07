@@ -49,6 +49,12 @@ public class MenuActivity extends AppCompatActivity {
 
         tvPlayer= (TextView) findViewById(R.id.player);
         URL_button = (Button) findViewById(R.id.URL_btn);
+
+        FancyButton play_btn = (FancyButton) findViewById(R.id.playBtn);
+        play_btn.setClickable(false);
+        FancyButton play_btn2 = (FancyButton) findViewById(R.id.playBtnTank);
+        play_btn2.setClickable(false);
+
         Button num_btn = (Button) findViewById(R.id.num_btn);
 
         if( num_btn != null )   {
@@ -150,6 +156,36 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    public void goPlayTank(View v){
+        tvPlayer.setText("Player");
+        EditText username = (EditText) findViewById(R.id.username);
+
+        switch (player) {
+            case 1:
+                mSocket.emit("username1" + magic, username.getText().toString());
+                break;
+            case 2:
+                mSocket.emit("username2" + magic, username.getText().toString());
+                break;
+        }
+
+        mSocket.emit("gameStart" + magic, "1");
+
+
+
+        Intent single = new Intent(MenuActivity.this, TankActivity.class);
+        /*if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            View sharedView = v;
+            String transitionName = getString(R.string.blue_transitionName);
+
+            ActivityOptions transitionActivityOptions = null;
+            transitionActivityOptions = ActivityOptions.makeSceneTransitionAnimation(MenuActivity.this, sharedView, transitionName);
+            startActivity(single, transitionActivityOptions.toBundle());
+        }else {*/
+            startActivity(single);
+        //}
+    }
+
     /*public void goMultiplePlayer(View v){
         Intent multiple = new Intent(MenuActivity.this, MultipleActivity.class);
         startActivity(multiple);
@@ -226,9 +262,9 @@ public class MenuActivity extends AppCompatActivity {
 
     public void ConnectandWaitforConfirm()    {
         mSocket.once("connectOK", onConnectOK);
-        Log.e("CWC", "before connect");
+        //Log.e("CWC", "before connect");
         mSocket.connect();
-        Log.e("CWC", "connectOK");
+        //Log.e("CWC", "connectOK");
     }
 
 
@@ -250,11 +286,13 @@ public class MenuActivity extends AppCompatActivity {
                     if (message.equals("player1")) {
                         player = 1;
                         tvPlayer.setText("Player1");
+                        FancyButton play_btn = (FancyButton) findViewById(R.id.playBtn);
+                        play_btn.setClickable(true);
+                        FancyButton play_btn2 = (FancyButton) findViewById(R.id.playBtnTank);
+                        play_btn2.setClickable(true);
                     } else if (message.equals("player2")) {
                         player = 2;
                         tvPlayer.setText("Player2");
-                        FancyButton play_btn = (FancyButton) findViewById(R.id.playBtn);
-                        play_btn.setVisibility(View.GONE);
                     } else if (message.equals("checkConnect")) {
                         mSocket.emit("stillConnect" + magic, uuid);
                     } else if (message.equals("full")) {
